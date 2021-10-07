@@ -1,0 +1,72 @@
+There are two main objects in the library, EzStateCache<T> a cache that holds an instance of type T and EzStateArrayCache<T, P> a cache that holds and array of type T where the id property of T is of type P.
+
+The private BehaviorSubject property holds an instance of EzState<T>.
+
+export interface EzState<T> {
+  value: T;
+  loading?: boolean;
+  loaded?: boolean;
+  loadError?: any;
+  saving?: boolean;
+  saved?: boolean;
+  saveError?: any;
+  updating?: boolean;
+  updated?: boolean;
+  updateError?: any;
+  deleting?: boolean;
+  deleted?: boolean;
+  deleteError?: any;
+}
+
+An instance of EzStateCache is created with the constructor containing two optional parameters, the initial state and an error handler function.
+
+userCache = new EzStateCache<User>();
+
+now we can use this cache to wire up any of the derived observables that watch for state changes
+
+loading$ = this.userCache.loading$;
+
+user$ = this.userCache.value$;
+
+There are 4 crud functions, load, save, update and delete that take observables that return type T that updates the value of the cache with the emitted value toggling the state properties.
+
+this.userCahe.load(this.http.get<User>(‘user’)); will cause loading to toggle true and loaded toggle to false, then as the request emits a user object loading will toggle false, loaded true and the ache will be updated with the emitted value.
+
+There are some compound observables, loadingOrUpdating$, savedOrUpdated$ and error$ which emits any of the 4 error type if one occurs.
+
+There is a state$ observable that can be used to compute your own compound observables and a snapshot property that give you a snapshot of the state at a particular time.
+
+if (!this.userCache.snapshot.loading) {
+  this.userCache.load(this.http.get<User>(‘user’));
+}
+
+this.userCache.save(this.http.put<string>(‘user’).pipe(map(response => mapResponseToUser(response))));
+
+If you just want to fire off a http put but are not interested in updating the value in the cache you can add the ignore response flag and you will not need to map the response.
+
+this.userCache.save(this.http.put<string>(‘user’), true);
+
+Will make the http call, trigger the error handler if an error occurs but the cache will not be updated after the request finishes.
+
+The EzStateArrayCache<T, P> is very similar in usage but it manages an array of objects when we call save, update and delete.
+
+usersCache = new EzStateCache<User, string>(‘userId’, { userId: undefined });
+
+userId tells the cache that the id property and the default user is the object used for creating a new user.
+
+users$ = this.usersCache.items$;
+user$ = this.usersCache.item$;
+
+this.usersCache.load(this.http.get<User>(‘users’));
+
+will cause users$ to emit the array of all the users when the request finishes.
+
+this.usersCache.select(‘A12345’);
+
+will cause user$ to emit the user with id A12345.
+
+this.usersCache.select();
+
+will cause user$ to emit the default user object passed into the constructor.
+
+Calling the CRUD method is the same as with the single item cache but the internal array will managed for you with the user that the Observable<User> parameter emits. Again you can use ignore response flag if the cache is not to be updated with the response and the parameter can be Observable<any>.

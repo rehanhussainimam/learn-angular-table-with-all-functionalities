@@ -1,0 +1,27 @@
+<h1>Users</h1>
+
+<app-spinner *ngIf="loading$ | async else loaded">loading</app-spinner>
+
+<ng-template #loaded>
+
+  <ez-table [data]="users$ | async" pageSize="10">
+    <ez-table-search></ez-table-search>
+    <ez-column heading="Name" property="lastName">
+      <ng-template let-user>
+        <a [routerLink]="'/user/' + user.id">
+        {{user.firstName}} {{user.lastName}}
+        </a>
+      </ng-template>
+    </ez-column>
+    <ez-column heading="Email" property="email"></ez-column>
+    <ez-column [sortable]="false">
+      <ng-template let-user>
+        <button (click)="delete(user)">delete</button>
+      </ng-template>
+    </ez-column>
+    <ez-table-pager footer></ez-table-pager>
+  </ez-table>
+
+  <a routerLink="../user">Add new user</a>
+
+</ng-template>

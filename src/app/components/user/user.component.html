@@ -1,0 +1,34 @@
+<h1>User</h1>
+
+<app-spinner *ngIf="loading$ | async else loaded">loading</app-spinner>
+
+<ng-template #loaded>
+  <ng-container *ngIf="!(saved$ | async) else saved">
+    <div class="error" *ngIf="error$ | async as error">{{error}}</div>
+
+    <form *ngIf="user$ | async | clone as user" ezForm (ezSubmit)="save(user)">
+
+      <ez-select name="title" [(ngModel)]="user.title" [options]="titles$ | async" required>Title</ez-select>
+
+      <ez-text name="firstName" [(ngModel)]="user.firstName" required>First Name</ez-text>
+      
+      <ez-text name="lastName" [(ngModel)]="user.lastName" required>Last Name</ez-text>
+
+      <ez-text name="email" [(ngModel)]="user.email" required>Email</ez-text>
+
+      <ez-password name="password" [(ngModel)]="password">Password</ez-password>
+
+      <ez-password name="passwordAgain" [(ngModel)]="passwordAgain" [same]="password" [messages]="{ same: 'Should be the same as password' }">Password Again</ez-password>
+
+      <app-spinner *ngIf="saving$ | async else notSaving">saving</app-spinner>
+      <ng-template #notSaving>
+        <button>Save</button>
+      </ng-template>
+
+    </form>
+    <a routerLink="/users">Cancel</a>
+  </ng-container>
+  <ng-template #saved>
+    Update successful <a routerLink="/users">Return to users</a>
+  </ng-template>
+</ng-template>
